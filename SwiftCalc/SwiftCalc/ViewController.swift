@@ -21,8 +21,9 @@ class ViewController: UIViewController {
     
     // TODO: This looks like a good place to add some data structures.
     //       One data structure is initialized below for reference.
-    var someDataStructure: [String] = [""]
-    
+    var sequence: [String] = []
+    var currentValue: String = ""
+    var lastButtonIsOperator: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,6 +37,7 @@ class ViewController: UIViewController {
         resultLabel.accessibilityValue = "resultLabel"
         makeButtons()
         // Do any additional setup here.
+        resultLabel.text! = ""
     }
     
     override func didReceiveMemoryWarning() {
@@ -45,28 +47,112 @@ class ViewController: UIViewController {
     
     // TODO: A method to update your data structure(s) would be nice.
     //       Modify this one or create your own.
-    func updateSomeDataStructure(_ content: String) {
-        print("Update me like one of those PCs")
+    func updateSequence(_ content: String) {
+        sequence.append(content)
     }
     
     // TODO: Ensure that resultLabel gets updated.
     //       Modify this one or create your own.
-    func updateResultLabel(_ content: String) {
-        print("Update me like one of those PCs")
-    }
-    
-    
+    func updateResultLabel(_ content: String, replaceResultLabel: Bool) {
+        if !replaceResultLabel {
+            if resultLabel.text!.characters.count < 7 {
+                resultLabel.text = resultLabel.text! + content
+            }
+        } else {
+            resultLabel.text = content
+            }
+        }
+
     // TODO: A calculate method with no parameters, scary!
     //       Modify this one or create your own.
-    func calculate() -> String {
-        return "0"
+    func calculate() -> String { // rewrite to handle double + double, int + double
+        //return String(intCalculate(a: first_button,b: second_button, operation: single_operator))
+        print(sequence)
+        simplifySequence()
+        print(sequence)
+        var result: String = String(intCalculate(a: Int(sequence[0])!, b: Int(sequence[2])!, operation: sequence[1]))
+        var count: Int = 3
+        while count < sequence.count {
+            //updateResultLabel(result, replaceResultLabel: true)
+            //print(sequence[count])
+            //print(sequence[count + 1])
+            result = String(intCalculate(a: Int(result)!, b: Int(sequence[count + 1])!, operation: sequence[count]))
+            count = count + 2
+            //print(sequence.count)
+        }
+        updateResultLabel(result, replaceResultLabel: true)
+        sequence = [result]
+        return result
+    }
+
+    //
+    func simplifySequence() {// simplifies sequence into [number, operator, number, operator,...]
+        var simplifiedSequence: [String] = []
+        var beginNumber: String = ""
+        var counter: Int = 0
+// CMND + /
+//        for item in sequence {
+//            counter = counter + 1
+//            if Int(item) != nil { //Next element is a number
+//                beginNumber = beginNumber + item
+//            } else{ //Next element if an operator
+//                if beginNumber != "0"{
+//                    simplifiedSequence.append(beginNumber)
+//                }
+//                simplifiedSequence.append(item)
+//                beginNumber = ""
+//            }
+//            if counter == sequence.count { //Since last element should be a number, we could hardcode the last number
+//                simplifiedSequence.append(beginNumber)
+//            }
+//        }
+//        sequence = simplifiedSequence
+        var itemBefore: String = "" //Used to see if number has been negated
+        for item in sequence {
+            counter = counter + 1
+            if Int(item) != nil { //Next element is a number
+                if itemBefore == "+/-" {
+                    beginNumber = String((-1)*Int(beginNumber)!)
+                }
+                beginNumber = beginNumber + item
+                itemBefore = item
+            } else{ //Next element if an operator
+                print(item)
+                if item == "+/-" {
+                    beginNumber = String((-1)*Int(beginNumber)!)
+                    print(beginNumber)
+                } else {
+                    //if beginNumber != "0"{
+                simplifiedSequence.append(beginNumber)
+                    //}
+                    simplifiedSequence.append(item)
+                    beginNumber = ""
+                    itemBefore = item
+                }
+            }
+            if counter == sequence.count {
+                //if item == "+/-" {
+                //    beginNumber = String((-1)*Int(beginNumber)!)
+                //}
+                simplifiedSequence.append(beginNumber)
+            }
+        }
+        sequence = simplifiedSequence
     }
     
     // TODO: A simple calculate method for integers.
     //       Modify this one or create your own.
     func intCalculate(a: Int, b:Int, operation: String) -> Int {
         print("Calculation requested for \(a) \(operation) \(b)")
-        return 0
+        if operation == "+" {
+            return a + b
+        } else if operation == "-" {
+            return a - b
+        } else if operation == "/" {
+            return a/b
+        } else {
+            return a*b
+        }
     }
     
     // TODO: A general calculate method for doubles
@@ -81,16 +167,57 @@ class ViewController: UIViewController {
         guard Int(sender.content) != nil else { return }
         print("The number \(sender.content) was pressed")
         // Fill me in!
+        sequence.append(sender.content)
+        if resultLabel.text == "0" || lastButtonIsOperator == true {
+            updateResultLabel(sender.content, replaceResultLabel: true)
+        } //else if lastButtonIsOperator == true {
+            //updateResultLabel(sender.content, replaceResultLabel: true)
+        //}
+        else {
+            updateResultLabel(sender.content, replaceResultLabel: false)
+        }
+        lastButtonIsOperator = false
     }
     
     // REQUIRED: The responder to an operator button being pressed.
     func operatorPressed(_ sender: CustomButton) {
         // Fill me in!
+        print("The operator \(sender.content) was pressed")
+        lastButtonIsOperator = true
+        if sender.content == "=" {
+            currentValue = calculate()
+            //single_operator = ""
+            //sequence = []
+            updateResultLabel(currentValue, replaceResultLabel: true)
+        } else if sender.content == "C" {
+            //single_operator = ""
+            sequence = []
+            updateResultLabel("0", replaceResultLabel: true)
+        } else if sender.content == "+/-" {
+            updateResultLabel(String((-1)*Int(resultLabel.text!)!), replaceResultLabel: true)
+            sequence.append(sender.content)
+        }
+        else {
+//            if Int(sequence.last!) != nil{ //Is an integer
+//                if sequence.count > 2 {
+//                    sequence = [calculate()] + sequence
+//                }
+//            }
+            
+            if sequence.contains("+") || sequence.contains("-") || sequence.contains("*") || sequence.contains("/") {
+                currentValue = calculate()
+            }
+            updateSequence(sender.content)
+            updateResultLabel(currentValue, replaceResultLabel: true)
+        }
     }
     
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
        // Fill me in!
+        if sender.content == "0" {
+            updateSequence(sender.content)
+        }
     }
     
     // IMPORTANT: Do NOT change any of the code below.
