@@ -70,15 +70,22 @@ class ViewController: UIViewController {
         print(sequence)
         simplifySequence()
         print(sequence)
-        var result: String = String(intCalculate(a: Int(sequence[0])!, b: Int(sequence[2])!, operation: sequence[1]))
+        var result: String = String(doubleCalculate(a: sequence[0], b: sequence[2], operation: sequence[1]))
+        //result = String(intCalculate(a: Int(sequence[0])!, b: Int(sequence[2])!, operation: sequence[1]))
         var count: Int = 3
         while count < sequence.count {
-            //updateResultLabel(result, replaceResultLabel: true)
-            //print(sequence[count])
-            //print(sequence[count + 1])
-            result = String(intCalculate(a: Int(result)!, b: Int(sequence[count + 1])!, operation: sequence[count]))
+            
+            //result = String(intCalculate(a: Int(result)!, b: Int(sequence[count + 1])!, operation: sequence[count]))
+            result = String(doubleCalculate(a: result, b: sequence[count + 1], operation: sequence[count]))
+            let isInteger = floor(Double(result)!) == Double(result)!
+            if isInteger == true {
+                result = String(Int(result)!)
+            }
             count = count + 2
-            //print(sequence.count)
+        }
+        let isInteger = floor(Double(result)!) == Double(result)!
+        if isInteger == true {
+            result = String(Int(Double(result)!))
         }
         updateResultLabel(result, replaceResultLabel: true)
         sequence = [result]
@@ -157,9 +164,19 @@ class ViewController: UIViewController {
     
     // TODO: A general calculate method for doubles
     //       Modify this one or create your own.
-    func calculate(a: String, b:String, operation: String) -> Double {
+    func doubleCalculate(a: String, b:String, operation: String) -> Double {
         print("Calculation requested for \(a) \(operation) \(b)")
-        return 0.0
+        let aDouble: Double = Double(a)!
+        let bDouble: Double = Double(b)!
+        if operation == "+" {
+            return aDouble + bDouble
+        } else if operation == "-" {
+            return aDouble - bDouble
+        } else if operation == "/" {
+            return aDouble/bDouble
+        } else {
+            return aDouble*bDouble
+        }
     }
     
     // REQUIRED: The responder to a number button being pressed.
@@ -217,6 +234,8 @@ class ViewController: UIViewController {
        // Fill me in!
         if sender.content == "0" {
             updateSequence(sender.content)
+        } else if sender.content == "." {
+            updateSequence(".")
         }
     }
     
